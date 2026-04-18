@@ -77,6 +77,19 @@ h2 {
   gap: 0.4rem;
 }
 
+.quick-remove {
+  margin-top: 0.5rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid #2f426f;
+}
+
+.quick-remove-title {
+  margin: 0 0 0.32rem;
+  color: #cde4ff;
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+
 .palette-item {
   border: 1px solid #3b5086;
   background: #1e2d50;
