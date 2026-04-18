@@ -76,6 +76,7 @@ const threeState = {
   orbitGroup: null,
   orbitLines: [],
   cloudMeshes: [],
+  cloudElectronMarkers: [],
   electronMeshes: [],
   interaction: {
     dragging: false,
@@ -372,6 +373,7 @@ function buildOrbitsAndElectrons3D() {
   clearGroup(orbitGroup);
   threeState.orbitLines = [];
   threeState.cloudMeshes = [];
+  threeState.cloudElectronMarkers = [];
   threeState.electronMeshes = [];
 
   const distribution = electronDistribution(state.electrons, state.orbitCount);
@@ -392,6 +394,13 @@ function buildOrbitsAndElectrons3D() {
     clearcoat: 0.15,
   });
   const electronGeometry = new THREE.SphereGeometry(4.5, 18, 18);
+  const cloudElectronGeometry = new THREE.SphereGeometry(3.2, 14, 14);
+  const cloudElectronMaterial = new THREE.MeshStandardMaterial({
+    color: 0x9be7ff,
+    emissive: 0x204a60,
+    roughness: 0.35,
+    metalness: 0.08,
+  });
 
   for (let i = 0; i < state.orbitCount; i += 1) {
     const orbitRadius = 55 + i * 26;
@@ -418,6 +427,26 @@ function buildOrbitsAndElectrons3D() {
       const mesh = new THREE.Mesh(electronGeometry, electronMaterial);
       orbitGroup.add(mesh);
       threeState.electronMeshes.push({ mesh, orbitIndex: i, electronIndex: e, count, radius: orbitRadius, tiltX, tiltY });
+
+      const marker = new THREE.Mesh(cloudElectronGeometry, cloudElectronMaterial);
+      orbitGroup.add(marker);
+
+      const axis = new THREE.Vector3(
+        Math.random() * 2 - 1,
+        Math.random() * 2 - 1,
+        Math.random() * 2 - 1
+      ).normalize();
+      const phase = Math.random() * Math.PI * 2;
+      const speed = (0.24 + Math.random() * 0.26) / (i + 1);
+
+      threeState.cloudElectronMarkers.push({
+        mesh: marker,
+        orbitIndex: i,
+        radius: shellRadius,
+        axis,
+        phase,
+        speed,
+      });
     }
   }
 
@@ -436,6 +465,10 @@ function applyElectronModelVisuals() {
     entry.mesh.visible = showBohr;
   });
 
+  threeState.cloudElectronMarkers.forEach((entry) => {
+    entry.mesh.visible = showCloud;
+  });
+
   threeState.orbitLines.forEach((line) => {
     line.visible = Boolean(state.showBohrRings);
   });
@@ -447,22 +480,43 @@ function refresh3DAtom() {
 }
 
 function updateElectrons3D() {
-  if (state.electronModel !== "bohr") return;
-  threeState.electronMeshes.forEach((entry) => {
-    const { mesh, orbitIndex, electronIndex, count, radius, tiltX, tiltY } = entry;
-    const baseAngle = count > 0 ? (electronIndex / count) * Math.PI * 2 : 0;
-    const speed = 0.42 / (orbitIndex + 1);
-    const angle = baseAngle + state.time * speed * state.speedMultiplier;
+  if (state.electronModel === "bohr") {
+    threeState.electronMeshes.forEach((entry) => {
+      const { mesh, orbitIndex, electronIndex, count, radius, tiltX, tiltY } = entry;
+      const baseAngle = count > 0 ? (electronIndex / count) * Math.PI * 2 : 0;
+      const speed = 0.42 / (orbitIndex + 1);
+      const angle = baseAngle + state.time * speed * state.speedMultiplier;
 
-    const x = Math.cos(angle) * radius;
-    const z = Math.sin(angle) * radius;
-    const pos = new THREE.Vector3(x, 0, z);
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      const pos = new THREE.Vector3(x, 0, z);
 
-    const rx = new THREE.Matrix4().makeRotationX(tiltX);
-    const ry = new THREE.Matrix4().makeRotationY(tiltY);
-    pos.applyMatrix4(rx).applyMatrix4(ry);
-    mesh.position.copy(pos);
-  });
+      const rx = new THREE.Matrix4().makeRotationX(tiltX);
+      const ry = new THREE.Matrix4().makeRotationY(tiltY);
+      pos.applyMatrix4(rx).applyMatrix4(ry);
+      mesh.position.copy(pos);
+    });
+  }
+
+  if (state.electronModel === "cloud") {
+    threeState.cloudElectronMarkers.forEach((entry, idx) => {
+      const angle = entry.phase + state.time * entry.speed * state.speedMultiplier;
+      const latitudeWobble = Math.sin(angle * 0.7 + idx * 0.23) * 0.55;
+      const theta = angle;
+      const phi = Math.PI / 2 + latitudeWobble;
+
+      const local = new THREE.Vector3(
+        Math.cos(theta) * Math.sin(phi),
+        Math.cos(phi),
+        Math.sin(theta) * Math.sin(phi)
+      )
+        .normalize()
+        .multiplyScalar(entry.radius);
+
+      local.applyAxisAngle(entry.axis, angle * 0.85);
+      entry.mesh.position.copy(local);
+    });
+  }
 }
 
 function setViewMode(mode) {
