@@ -105,6 +105,28 @@ h2 {
   gap: 0.5rem;
 }
 
+.view-mode {
+  margin: 0.3rem 0 0.2rem;
+  border: 1px solid #405a91;
+  border-radius: 8px;
+  padding: 0.45rem 0.6rem 0.55rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.view-mode legend {
+  color: var(--muted);
+  font-size: 0.86rem;
+  padding: 0 0.2rem;
+}
+
+.view-mode label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.93rem;
+}
+
 #speedSlider {
   width: 100%;
 }
@@ -141,15 +163,32 @@ h2 {
   overflow: hidden;
 }
 
+.sim-view {
+  width: 100%;
+  height: 100%;
+}
+
+.hidden {
+  display: none;
+}
+
 .drop-zone.drag-over {
   border-color: var(--accent);
   box-shadow: inset 0 0 0 2px rgba(93, 208, 255, 0.25);
 }
 
 #atomCanvas {
+  background: radial-gradient(circle at 60% 35%, #13203c 0%, #0a1223 70%);
+}
+
+#threeContainer {
+  background: radial-gradient(circle at 62% 30%, #13203c 0%, #0a1223 70%);
+}
+
+#threeContainer canvas {
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at 60% 35%, #13203c 0%, #0a1223 70%);
+  display: block;
 }
 
 .drop-hint {
