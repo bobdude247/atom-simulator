@@ -32,6 +32,12 @@ const speedSlider = document.getElementById("speedSlider");
 const speedValue = document.getElementById("speedValue");
 const resetButton = document.getElementById("resetButton");
 const viewModeInputs = document.querySelectorAll('input[name="viewMode"]');
+const yawSlider = document.getElementById("yawSlider");
+const yawValue = document.getElementById("yawValue");
+const pitchSlider = document.getElementById("pitchSlider");
+const pitchValue = document.getElementById("pitchValue");
+const zoomSlider = document.getElementById("zoomSlider");
+const zoomValue = document.getElementById("zoomValue");
 
 const elementNameEl = document.getElementById("elementName");
 const elementSymbolEl = document.getElementById("elementSymbol");
@@ -49,6 +55,9 @@ const state = {
   speedMultiplier: 1,
   time: 0,
   viewMode: "3d",
+  cameraYaw: 25,
+  cameraPitch: 18,
+  cameraDistance: 360,
 };
 
 const threeState = {
@@ -58,6 +67,13 @@ const threeState = {
   nucleusGroup: null,
   orbitGroup: null,
   electronMeshes: [],
+  interaction: {
+    dragging: false,
+    startX: 0,
+    startY: 0,
+    startYaw: 0,
+    startPitch: 0,
+  },
 };
 
 function orbitCapacity(index) {
@@ -144,6 +160,33 @@ function ensureViewSizes() {
   }
 }
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function updateCameraPosition() {
+  if (!threeState.camera) return;
+  const yaw = THREE.MathUtils.degToRad(state.cameraYaw);
+  const pitch = THREE.MathUtils.degToRad(state.cameraPitch);
+  const distance = state.cameraDistance;
+
+  const x = distance * Math.cos(pitch) * Math.sin(yaw);
+  const y = distance * Math.sin(pitch);
+  const z = distance * Math.cos(pitch) * Math.cos(yaw);
+
+  threeState.camera.position.set(x, y, z);
+  threeState.camera.lookAt(0, 0, 0);
+}
+
+function syncCameraUI() {
+  yawSlider.value = String(Math.round(state.cameraYaw));
+  pitchSlider.value = String(Math.round(state.cameraPitch));
+  zoomSlider.value = String(Math.round(state.cameraDistance));
+  yawValue.textContent = `${Math.round(state.cameraYaw)}°`;
+  pitchValue.textContent = `${Math.round(state.cameraPitch)}°`;
+  zoomValue.textContent = `${Math.round(state.cameraDistance)}`;
+}
+
 function clearGroup(group) {
   while (group.children.length) {
     const child = group.children.pop();
@@ -171,8 +214,6 @@ function init3D() {
   scene.background = new THREE.Color(0x08101f);
 
   const camera = new THREE.PerspectiveCamera(52, 1, 0.1, 2000);
-  camera.position.set(0, 120, 360);
-  camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -217,6 +258,8 @@ function init3D() {
   threeState.renderer = renderer;
   threeState.nucleusGroup = nucleusGroup;
   threeState.orbitGroup = orbitGroup;
+
+  updateCameraPosition();
 }
 
 function buildNucleus3D() {
@@ -318,6 +361,57 @@ function setViewMode(mode) {
   threeContainer.classList.toggle("hidden", !show3D);
   canvas2D.classList.toggle("hidden", show3D);
   ensureViewSizes();
+}
+
+function setupPointerControls() {
+  const target = threeContainer;
+
+  target.addEventListener("pointerdown", (event) => {
+    if (state.viewMode !== "3d") return;
+    const i = threeState.interaction;
+    i.dragging = true;
+    i.startX = event.clientX;
+    i.startY = event.clientY;
+    i.startYaw = state.cameraYaw;
+    i.startPitch = state.cameraPitch;
+    target.setPointerCapture(event.pointerId);
+  });
+
+  target.addEventListener("pointermove", (event) => {
+    const i = threeState.interaction;
+    if (!i.dragging || state.viewMode !== "3d") return;
+
+    const dx = event.clientX - i.startX;
+    const dy = event.clientY - i.startY;
+    state.cameraYaw = i.startYaw + dx * 0.35;
+    state.cameraPitch = clamp(i.startPitch - dy * 0.25, -70, 70);
+    syncCameraUI();
+    updateCameraPosition();
+  });
+
+  target.addEventListener("pointerup", (event) => {
+    const i = threeState.interaction;
+    i.dragging = false;
+    if (target.hasPointerCapture(event.pointerId)) {
+      target.releasePointerCapture(event.pointerId);
+    }
+  });
+
+  target.addEventListener("pointercancel", () => {
+    threeState.interaction.dragging = false;
+  });
+
+  target.addEventListener(
+    "wheel",
+    (event) => {
+      if (state.viewMode !== "3d") return;
+      event.preventDefault();
+      state.cameraDistance = clamp(state.cameraDistance + event.deltaY * 0.35, 160, 720);
+      syncCameraUI();
+      updateCameraPosition();
+    },
+    { passive: false }
+  );
 }
 
 function drawBackgroundStars2D(width, height) {
@@ -465,6 +559,24 @@ function setupControls() {
     speedValue.textContent = `${state.speedMultiplier.toFixed(1)}x`;
   });
 
+  yawSlider.addEventListener("input", () => {
+    state.cameraYaw = Number(yawSlider.value);
+    yawValue.textContent = `${Math.round(state.cameraYaw)}°`;
+    updateCameraPosition();
+  });
+
+  pitchSlider.addEventListener("input", () => {
+    state.cameraPitch = Number(pitchSlider.value);
+    pitchValue.textContent = `${Math.round(state.cameraPitch)}°`;
+    updateCameraPosition();
+  });
+
+  zoomSlider.addEventListener("input", () => {
+    state.cameraDistance = Number(zoomSlider.value);
+    zoomValue.textContent = `${Math.round(state.cameraDistance)}`;
+    updateCameraPosition();
+  });
+
   viewModeInputs.forEach((input) => {
     input.addEventListener("change", () => {
       if (input.checked) {
@@ -480,6 +592,11 @@ function setupControls() {
     state.orbitCount = 1;
     state.speedMultiplier = Number(speedSlider.value);
     state.time = 0;
+    state.cameraYaw = 25;
+    state.cameraPitch = 18;
+    state.cameraDistance = 360;
+    syncCameraUI();
+    updateCameraPosition();
     updateElementInfo();
     refresh3DAtom();
   });
@@ -508,9 +625,11 @@ function init() {
   init3D();
   ensureViewSizes();
   setupDragAndDrop();
+  setupPointerControls();
   setupControls();
   updateElementInfo();
   speedValue.textContent = `${Number(speedSlider.value).toFixed(1)}x`;
+  syncCameraUI();
   refresh3DAtom();
   setViewMode("3d");
   requestAnimationFrame(animate);
