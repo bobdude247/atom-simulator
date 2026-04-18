@@ -144,6 +144,16 @@ h2 {
   font-size: 0.82rem;
 }
 
+.remove-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.28rem;
+}
+
+.remove-grid .secondary-btn {
+  width: 100%;
+}
+
 .controls input[type="range"] {
   width: 100%;
   margin: 0;

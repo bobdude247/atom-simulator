@@ -40,6 +40,10 @@ const zoomSlider = document.getElementById("zoomSlider");
 const zoomValue = document.getElementById("zoomValue");
 const electronModelInputs = document.querySelectorAll('input[name="electronModel"]');
 const showBohrRingsInput = document.getElementById("showBohrRings");
+const removeProtonButton = document.getElementById("removeProton");
+const removeNeutronButton = document.getElementById("removeNeutron");
+const removeElectronButton = document.getElementById("removeElectron");
+const removeOrbitButton = document.getElementById("removeOrbit");
 
 const elementNameEl = document.getElementById("elementName");
 const elementSymbolEl = document.getElementById("elementSymbol");
@@ -700,6 +704,34 @@ function handleDroppedItem(type) {
   refresh3DAtom();
 }
 
+function removeItem(type) {
+  switch (type) {
+    case "proton":
+      state.protons = Math.max(0, state.protons - 1);
+      // Keep atom neutral by default when removing protons.
+      state.electrons = Math.min(state.electrons, state.protons);
+      break;
+    case "neutron":
+      state.neutrons = Math.max(0, state.neutrons - 1);
+      break;
+    case "electron":
+      state.electrons = Math.max(0, state.electrons - 1);
+      break;
+    case "orbit":
+      state.orbitCount = Math.max(1, state.orbitCount - 1);
+      // If electron count exceeds available shell capacity after removing an orbit,
+      // trim electrons to fit visible shells.
+      const distribution = electronDistribution(state.electrons, state.orbitCount);
+      state.electrons = distribution.reduce((sum, n) => sum + n, 0);
+      break;
+    default:
+      return;
+  }
+
+  updateElementInfo();
+  refresh3DAtom();
+}
+
 function setupDragAndDrop() {
   const items = document.querySelectorAll(".palette-item");
   items.forEach((item) => {
@@ -763,6 +795,22 @@ function setupControls() {
     state.showBohrRings = showBohrRingsInput.checked;
     applyElectronModelVisuals();
   });
+
+  if (removeProtonButton) {
+    removeProtonButton.addEventListener("click", () => removeItem("proton"));
+  }
+
+  if (removeNeutronButton) {
+    removeNeutronButton.addEventListener("click", () => removeItem("neutron"));
+  }
+
+  if (removeElectronButton) {
+    removeElectronButton.addEventListener("click", () => removeItem("electron"));
+  }
+
+  if (removeOrbitButton) {
+    removeOrbitButton.addEventListener("click", () => removeItem("orbit"));
+  }
 
   viewModeInputs.forEach((input) => {
     input.addEventListener("change", () => {
