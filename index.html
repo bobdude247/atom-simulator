@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interactive Atom Simulator</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Interactive Atom Simulator</h1>
+      <p>Drag particles and orbits from the palette into the simulation.</p>
+    </header>
+
+    <main class="layout">
+      <aside class="palette" aria-label="Particle palette">
+        <h2>Palette</h2>
+        <div class="palette-items">
+          <button class="palette-item proton" draggable="true" data-item-type="proton">
+            Proton (+)
+          </button>
+          <button class="palette-item neutron" draggable="true" data-item-type="neutron">
+            Neutron (0)
+          </button>
+          <button class="palette-item electron" draggable="true" data-item-type="electron">
+            Electron (-)
+          </button>
+          <button class="palette-item orbit" draggable="true" data-item-type="orbit">
+            Add Orbit
+          </button>
+        </div>
+
+        <section class="controls" aria-label="Animation controls">
+          <label for="speedSlider">Orbit Speed</label>
+          <input id="speedSlider" type="range" min="0.1" max="3" value="1" step="0.1" />
+          <output id="speedValue" for="speedSlider">1.0x</output>
+
+          <button id="resetButton" class="reset-btn">Reset Atom</button>
+        </section>
+      </aside>
+
+      <section class="sim-panel">
+        <h2>Simulation</h2>
+        <div id="dropZone" class="drop-zone" aria-label="Atom simulation drop zone">
+          <canvas id="atomCanvas" width="900" height="620"></canvas>
+          <div class="drop-hint">Drop here</div>
+        </div>
+      </section>
+
+      <aside class="info-panel" aria-live="polite">
+        <h2>Element Info</h2>
+        <dl>
+          <dt>Element</dt>
+          <dd id="elementName">Hydrogen</dd>
+
+          <dt>Symbol</dt>
+          <dd id="elementSymbol">H</dd>
+
+          <dt>Atomic Number</dt>
+          <dd id="atomicNumber">1</dd>
+
+          <dt>Mass Number (p+n)</dt>
+          <dd id="massNumber">1</dd>
+
+          <dt>Category</dt>
+          <dd id="elementCategory">Nonmetal</dd>
+
+          <dt>Period / Group</dt>
+          <dd id="periodGroup">1 / 1</dd>
+
+          <dt>Counts</dt>
+          <dd id="counts">p:1 n:0 e:1 orbits:1</dd>
+        </dl>
+
+        <p class="instructions">
+          Build atoms by dragging particles and orbits from the palette. Proton count determines
+          the element.
+        </p>
+      </aside>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
