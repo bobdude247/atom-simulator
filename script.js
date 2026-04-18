@@ -91,6 +91,20 @@ function orbitCapacity(index) {
   return 2 * (index + 1) * (index + 1);
 }
 
+function buildMixedNucleonList(protons, neutrons) {
+  const particles = [];
+  for (let i = 0; i < protons; i += 1) particles.push("proton");
+  for (let i = 0; i < neutrons; i += 1) particles.push("neutron");
+
+  // Fisher-Yates shuffle so protons/neutrons are spatially mixed instead of clustered by type.
+  for (let i = particles.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [particles[i], particles[j]] = [particles[j], particles[i]];
+  }
+
+  return particles;
+}
+
 function requiredOrbitsForElectrons(electronCount) {
   let remaining = electronCount;
   let count = 0;
@@ -332,9 +346,7 @@ function buildNucleus3D() {
   const { nucleusGroup } = threeState;
   clearGroup(nucleusGroup);
 
-  const particles = [];
-  for (let i = 0; i < state.protons; i += 1) particles.push("proton");
-  for (let i = 0; i < state.neutrons; i += 1) particles.push("neutron");
+  const particles = buildMixedNucleonList(state.protons, state.neutrons);
 
   const total = Math.max(1, particles.length);
   const r = Math.max(16, Math.min(42, 10 + Math.sqrt(total) * 5));
@@ -596,9 +608,7 @@ function drawNucleus2D(centerX, centerY) {
   const nucleusRadius = Math.max(28, Math.min(80, 24 + Math.sqrt(totalNucleons) * 8));
   const particleR = Math.max(6, Math.min(13, 5 + nucleusRadius / 8));
 
-  const particles = [];
-  for (let i = 0; i < state.protons; i += 1) particles.push("proton");
-  for (let i = 0; i < state.neutrons; i += 1) particles.push("neutron");
+  const particles = buildMixedNucleonList(state.protons, state.neutrons);
 
   if (particles.length === 0) {
     ctx2D.fillStyle = "rgba(120,140,180,0.35)";
