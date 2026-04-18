@@ -22,6 +22,7 @@ body {
   font-family: Inter, Segoe UI, Arial, sans-serif;
   background: radial-gradient(circle at 20% 0%, #172849 0%, var(--bg) 45%);
   color: var(--text);
+  overflow-x: auto;
 }
 
 .app-header {
@@ -45,6 +46,10 @@ body {
   gap: 1rem;
   padding: 1rem;
   min-height: calc(100vh - 86px);
+}
+
+.layout > * {
+  min-width: 0;
 }
 
 .palette,
@@ -150,6 +155,7 @@ h2 {
 .sim-panel {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .drop-zone {
@@ -224,7 +230,7 @@ dd {
   line-height: 1.35;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
   .layout {
     grid-template-columns: 220px 1fr;
     grid-template-areas:
