@@ -38,6 +38,8 @@ const pitchSlider = document.getElementById("pitchSlider");
 const pitchValue = document.getElementById("pitchValue");
 const zoomSlider = document.getElementById("zoomSlider");
 const zoomValue = document.getElementById("zoomValue");
+const electronModelInputs = document.querySelectorAll('input[name="electronModel"]');
+const showBohrRingsInput = document.getElementById("showBohrRings");
 
 const elementNameEl = document.getElementById("elementName");
 const elementSymbolEl = document.getElementById("elementSymbol");
@@ -46,6 +48,10 @@ const massNumberEl = document.getElementById("massNumber");
 const elementCategoryEl = document.getElementById("elementCategory");
 const periodGroupEl = document.getElementById("periodGroup");
 const countsEl = document.getElementById("counts");
+const periodicTableButton = document.getElementById("periodicTableButton");
+const periodicTableDialog = document.getElementById("periodicTableDialog");
+const closePeriodicTable = document.getElementById("closePeriodicTable");
+const periodicTableGrid = document.getElementById("periodicTableGrid");
 
 const state = {
   protons: 1,
@@ -55,6 +61,8 @@ const state = {
   speedMultiplier: 1,
   time: 0,
   viewMode: "3d",
+  electronModel: "cloud",
+  showBohrRings: false,
   cameraYaw: 25,
   cameraPitch: 18,
   cameraDistance: 360,
@@ -66,6 +74,8 @@ const threeState = {
   camera: null,
   nucleusGroup: null,
   orbitGroup: null,
+  orbitLines: [],
+  cloudMeshes: [],
   electronMeshes: [],
   interaction: {
     dragging: false,
@@ -117,6 +127,43 @@ function getCurrentElement() {
   return ELEMENTS[state.protons] || null;
 }
 
+function renderPeriodicTable() {
+  if (!periodicTableGrid) return;
+  periodicTableGrid.innerHTML = "";
+
+  Object.entries(ELEMENTS).forEach(([atomicNumber, element]) => {
+    const z = Number(atomicNumber);
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "periodic-cell";
+    card.dataset.z = String(z);
+    card.innerHTML = `
+      <span class="periodic-z">${z}</span>
+      <span class="periodic-symbol">${element.symbol}</span>
+      <span class="periodic-name">${element.name}</span>
+      <span class="periodic-meta">P${element.period} · G${element.group}</span>
+    `;
+
+    card.addEventListener("click", () => {
+      state.protons = z;
+      state.electrons = z;
+      updateElementInfo();
+      refresh3DAtom();
+      periodicTableDialog.close();
+    });
+
+    periodicTableGrid.appendChild(card);
+  });
+}
+
+function highlightPeriodicElement() {
+  if (!periodicTableGrid) return;
+  periodicTableGrid.querySelectorAll(".periodic-cell").forEach((cell) => {
+    const isActive = Number(cell.dataset.z) === state.protons;
+    cell.classList.toggle("active", isActive);
+  });
+}
+
 function updateElementInfo() {
   normalizeState();
   const element = getCurrentElement();
@@ -144,6 +191,24 @@ function updateElementInfo() {
 
   massNumberEl.textContent = String(massNumber);
   countsEl.textContent = `p:${state.protons} n:${state.neutrons} e:${state.electrons} orbits:${state.orbitCount}`;
+  highlightPeriodicElement();
+}
+
+function setupPeriodicDialog() {
+  renderPeriodicTable();
+  highlightPeriodicElement();
+
+  if (periodicTableButton && periodicTableDialog) {
+    periodicTableButton.addEventListener("click", () => {
+      periodicTableDialog.showModal();
+    });
+  }
+
+  if (closePeriodicTable && periodicTableDialog) {
+    closePeriodicTable.addEventListener("click", () => {
+      periodicTableDialog.close();
+    });
+  }
 }
 
 function ensureViewSizes() {
@@ -305,6 +370,8 @@ function buildNucleus3D() {
 function buildOrbitsAndElectrons3D() {
   const { orbitGroup } = threeState;
   clearGroup(orbitGroup);
+  threeState.orbitLines = [];
+  threeState.cloudMeshes = [];
   threeState.electronMeshes = [];
 
   const distribution = electronDistribution(state.electrons, state.orbitCount);
@@ -314,6 +381,16 @@ function buildOrbitsAndElectrons3D() {
     roughness: 0.3,
     metalness: 0.1,
   });
+  const cloudMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0x73d4ff,
+    transparent: true,
+    opacity: 0.1,
+    roughness: 0.75,
+    metalness: 0,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    clearcoat: 0.15,
+  });
   const electronGeometry = new THREE.SphereGeometry(4.5, 18, 18);
 
   for (let i = 0; i < state.orbitCount; i += 1) {
@@ -321,7 +398,20 @@ function buildOrbitsAndElectrons3D() {
     const tiltX = (i % 2 === 0 ? 1 : -1) * (0.18 + i * 0.05);
     const tiltY = (i % 3) * 0.42;
 
-    orbitGroup.add(createOrbitLine(orbitRadius, tiltX, tiltY));
+    const orbitLine = createOrbitLine(orbitRadius, tiltX, tiltY);
+    orbitGroup.add(orbitLine);
+    threeState.orbitLines.push(orbitLine);
+
+    const shellRadius = Math.max(28, orbitRadius * 0.92);
+    const cloudMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(shellRadius, 28, 24),
+      cloudMaterial.clone()
+    );
+    cloudMesh.rotation.x = tiltX;
+    cloudMesh.rotation.y = tiltY;
+    cloudMesh.material.opacity = 0.06 + i * 0.015;
+    orbitGroup.add(cloudMesh);
+    threeState.cloudMeshes.push(cloudMesh);
 
     const count = distribution[i] || 0;
     for (let e = 0; e < count; e += 1) {
@@ -330,6 +420,25 @@ function buildOrbitsAndElectrons3D() {
       threeState.electronMeshes.push({ mesh, orbitIndex: i, electronIndex: e, count, radius: orbitRadius, tiltX, tiltY });
     }
   }
+
+  applyElectronModelVisuals();
+}
+
+function applyElectronModelVisuals() {
+  const showCloud = state.electronModel === "cloud";
+  const showBohr = state.electronModel === "bohr";
+
+  threeState.cloudMeshes.forEach((mesh) => {
+    mesh.visible = showCloud;
+  });
+
+  threeState.electronMeshes.forEach((entry) => {
+    entry.mesh.visible = showBohr;
+  });
+
+  threeState.orbitLines.forEach((line) => {
+    line.visible = Boolean(state.showBohrRings);
+  });
 }
 
 function refresh3DAtom() {
@@ -338,6 +447,7 @@ function refresh3DAtom() {
 }
 
 function updateElectrons3D() {
+  if (state.electronModel !== "bohr") return;
   threeState.electronMeshes.forEach((entry) => {
     const { mesh, orbitIndex, electronIndex, count, radius, tiltX, tiltY } = entry;
     const baseAngle = count > 0 ? (electronIndex / count) * Math.PI * 2 : 0;
@@ -577,6 +687,19 @@ function setupControls() {
     updateCameraPosition();
   });
 
+  electronModelInputs.forEach((input) => {
+    input.addEventListener("change", () => {
+      if (!input.checked) return;
+      state.electronModel = input.value === "bohr" ? "bohr" : "cloud";
+      applyElectronModelVisuals();
+    });
+  });
+
+  showBohrRingsInput.addEventListener("change", () => {
+    state.showBohrRings = showBohrRingsInput.checked;
+    applyElectronModelVisuals();
+  });
+
   viewModeInputs.forEach((input) => {
     input.addEventListener("change", () => {
       if (input.checked) {
@@ -592,6 +715,16 @@ function setupControls() {
     state.orbitCount = 1;
     state.speedMultiplier = Number(speedSlider.value);
     state.time = 0;
+    state.electronModel = "cloud";
+    state.showBohrRings = false;
+    if (electronModelInputs.length) {
+      electronModelInputs.forEach((input) => {
+        input.checked = input.value === "cloud";
+      });
+    }
+    if (showBohrRingsInput) {
+      showBohrRingsInput.checked = false;
+    }
     state.cameraYaw = 25;
     state.cameraPitch = 18;
     state.cameraDistance = 360;
@@ -599,6 +732,7 @@ function setupControls() {
     updateCameraPosition();
     updateElementInfo();
     refresh3DAtom();
+    applyElectronModelVisuals();
   });
 
   window.addEventListener("resize", ensureViewSizes);
@@ -627,6 +761,7 @@ function init() {
   setupDragAndDrop();
   setupPointerControls();
   setupControls();
+  setupPeriodicDialog();
   updateElementInfo();
   speedValue.textContent = `${Number(speedSlider.value).toFixed(1)}x`;
   syncCameraUI();

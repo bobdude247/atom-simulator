@@ -22,30 +22,33 @@ body {
   font-family: Inter, Segoe UI, Arial, sans-serif;
   background: radial-gradient(circle at 20% 0%, #172849 0%, var(--bg) 45%);
   color: var(--text);
-  overflow-x: auto;
+  overflow: hidden;
+  height: 100%;
 }
 
 .app-header {
-  padding: 1rem 1.5rem;
+  padding: 0.55rem 0.95rem;
   border-bottom: 1px solid #2d3b5f;
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.15rem;
 }
 
 .app-header p {
-  margin: 0.35rem 0 0;
+  margin: 0.2rem 0 0;
   color: var(--muted);
+  font-size: 0.84rem;
 }
 
 .layout {
   display: grid;
-  grid-template-columns: 260px 1fr 300px;
-  gap: 1rem;
-  padding: 1rem;
-  min-height: calc(100vh - 86px);
+  grid-template-columns: minmax(190px, 0.95fr) minmax(420px, 2.2fr) minmax(200px, 1fr);
+  gap: 0.65rem;
+  padding: 0.65rem;
+  height: calc(100vh - 60px);
+  min-height: 0;
 }
 
 .layout > * {
@@ -57,18 +60,21 @@ body {
 .info-panel {
   background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
   border: 1px solid #2a3961;
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: 10px;
+  padding: 0.7rem;
+  min-height: 0;
+  overflow: auto;
 }
 
 h2 {
   margin-top: 0;
-  font-size: 1.1rem;
+  margin-bottom: 0.45rem;
+  font-size: 0.98rem;
 }
 
 .palette-items {
   display: grid;
-  gap: 0.6rem;
+  gap: 0.4rem;
 }
 
 .palette-item {
@@ -76,10 +82,11 @@ h2 {
   background: #1e2d50;
   color: var(--text);
   border-radius: 8px;
-  padding: 0.65rem 0.75rem;
+  padding: 0.48rem 0.6rem;
   text-align: left;
   cursor: grab;
   font-weight: 600;
+  font-size: 0.88rem;
 }
 
 .palette-item:active {
@@ -103,25 +110,30 @@ h2 {
 }
 
 .controls {
-  margin-top: 1rem;
-  padding-top: 1rem;
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
   border-top: 1px solid #2f426f;
   display: grid;
-  gap: 0.5rem;
+  gap: 0.32rem;
+}
+
+.controls label,
+.controls output {
+  font-size: 0.82rem;
 }
 
 .view-mode {
   margin: 0.3rem 0 0.2rem;
   border: 1px solid #405a91;
   border-radius: 8px;
-  padding: 0.45rem 0.6rem 0.55rem;
+  padding: 0.32rem 0.45rem 0.36rem;
   display: grid;
-  gap: 0.3rem;
+  gap: 0.2rem;
 }
 
 .view-mode legend {
   color: var(--muted);
-  font-size: 0.86rem;
+  font-size: 0.76rem;
   padding: 0 0.2rem;
 }
 
@@ -129,27 +141,40 @@ h2 {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.93rem;
+  font-size: 0.82rem;
 }
 
-#speedSlider {
+.controls input[type="range"] {
   width: 100%;
+  margin: 0;
 }
 
-#speedValue {
+.controls output {
   color: var(--accent);
   font-weight: 700;
 }
 
 .reset-btn {
-  margin-top: 0.4rem;
+  margin-top: 0.25rem;
   border: 1px solid #4c6297;
   border-radius: 8px;
-  padding: 0.55rem 0.7rem;
+  padding: 0.43rem 0.56rem;
   background: #243863;
   color: var(--text);
   font-weight: 600;
   cursor: pointer;
+  font-size: 0.82rem;
+}
+
+.secondary-btn {
+  border: 1px solid #4c6297;
+  border-radius: 8px;
+  padding: 0.4rem 0.56rem;
+  background: #243863;
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.8rem;
 }
 
 .sim-panel {
@@ -161,7 +186,7 @@ h2 {
 .drop-zone {
   position: relative;
   flex: 1;
-  min-height: 560px;
+  min-height: 0;
   border: 2px dashed #425c95;
   border-radius: 12px;
   display: grid;
@@ -199,12 +224,23 @@ h2 {
 
 .drop-hint {
   position: absolute;
-  bottom: 0.7rem;
-  right: 0.8rem;
-  font-size: 0.8rem;
+  bottom: 0.45rem;
+  right: 0.55rem;
+  font-size: 0.7rem;
   color: var(--muted);
   background: rgba(13, 20, 39, 0.65);
   padding: 0.2rem 0.45rem;
+  border-radius: 6px;
+}
+
+.interaction-help {
+  position: absolute;
+  top: 0.45rem;
+  left: 0.55rem;
+  font-size: 0.7rem;
+  color: #cde4ff;
+  background: rgba(13, 20, 39, 0.58);
+  padding: 0.2rem 0.4rem;
   border-radius: 6px;
 }
 
@@ -213,24 +249,98 @@ dl {
 }
 
 dt {
-  margin-top: 0.65rem;
+  margin-top: 0.4rem;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.75rem;
 }
 
 dd {
-  margin: 0.15rem 0 0;
+  margin: 0.08rem 0 0;
   font-weight: 650;
+  font-size: 0.88rem;
 }
 
 .instructions {
-  margin-top: 1rem;
+  margin-top: 0.55rem;
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: 0.76rem;
   line-height: 1.35;
 }
 
+.periodic-dialog {
+  width: min(920px, 96vw);
+  max-height: 85vh;
+  border: 1px solid #2a3961;
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: linear-gradient(180deg, #121f37 0%, #182746 100%);
+  color: var(--text);
+}
+
+.periodic-dialog::backdrop {
+  background: rgba(3, 8, 18, 0.72);
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.55rem;
+}
+
+.dialog-header h3 {
+  margin: 0;
+  font-size: 0.96rem;
+}
+
+.periodic-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  gap: 0.4rem;
+}
+
+.periodic-cell {
+  border: 1px solid #37508a;
+  border-radius: 8px;
+  background: #1a2c52;
+  padding: 0.35rem 0.4rem;
+  display: grid;
+  gap: 0.08rem;
+}
+
+.periodic-cell.active {
+  border-color: #5dd0ff;
+  box-shadow: 0 0 0 1px rgba(93, 208, 255, 0.45);
+}
+
+.periodic-z {
+  color: #a8c0ea;
+  font-size: 0.7rem;
+}
+
+.periodic-symbol {
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.periodic-name {
+  color: #d8e7ff;
+  font-size: 0.74rem;
+}
+
+.periodic-meta {
+  color: #9cb0d7;
+  font-size: 0.66rem;
+}
+
 @media (max-width: 1400px) {
+  .layout {
+    grid-template-columns: 210px 1fr 200px;
+  }
+}
+
+@media (max-width: 1200px) {
   .layout {
     grid-template-columns: 220px 1fr;
     grid-template-areas:
@@ -252,11 +362,23 @@ dd {
 }
 
 @media (max-width: 900px) {
+  html,
+  body {
+    overflow: auto;
+    height: auto;
+  }
+
   .layout {
     grid-template-columns: 1fr;
     grid-template-areas:
       "palette"
       "sim"
       "info";
+    height: auto;
+    min-height: calc(100vh - 60px);
+  }
+
+  .periodic-grid {
+    grid-template-columns: repeat(2, minmax(130px, 1fr));
   }
 }
