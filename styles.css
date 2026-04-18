@@ -83,6 +83,12 @@ h2 {
   border-top: 1px solid #2f426f;
 }
 
+.quick-adjust {
+  margin-top: 0.5rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid #2f426f;
+}
+
 .quick-remove-title {
   margin: 0 0 0.32rem;
   color: #cde4ff;
@@ -161,6 +167,41 @@ h2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.28rem;
+}
+
+.adjust-grid {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.adjust-row {
+  display: grid;
+  grid-template-columns: 1.3rem 1fr auto;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.adjust-row span {
+  color: #cde4ff;
+  font-weight: 700;
+  font-size: 0.76rem;
+  text-align: center;
+}
+
+.adjust-row input[type="number"] {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #4c6297;
+  border-radius: 8px;
+  padding: 0.3rem 0.45rem;
+  background: #192848;
+  color: var(--text);
+  font-size: 0.82rem;
+}
+
+.adjust-row .secondary-btn {
+  min-width: 2rem;
+  padding: 0.36rem 0.52rem;
 }
 
 .remove-grid .secondary-btn {

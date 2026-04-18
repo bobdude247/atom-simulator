@@ -44,6 +44,15 @@ const removeProtonButton = document.getElementById("removeProton");
 const removeNeutronButton = document.getElementById("removeNeutron");
 const removeElectronButton = document.getElementById("removeElectron");
 const removeOrbitButton = document.getElementById("removeOrbit");
+const addProtonButton = document.getElementById("addProton");
+const addNeutronButton = document.getElementById("addNeutron");
+const addElectronButton = document.getElementById("addElectron");
+const addOrbitButton = document.getElementById("addOrbit");
+
+const protonCountInput = document.getElementById("protonCountInput");
+const neutronCountInput = document.getElementById("neutronCountInput");
+const electronCountInput = document.getElementById("electronCountInput");
+const orbitCountInput = document.getElementById("orbitCountInput");
 
 const elementNameEl = document.getElementById("elementName");
 const elementSymbolEl = document.getElementById("elementSymbol");
@@ -187,6 +196,11 @@ function updateElementInfo() {
   normalizeState();
   const element = getCurrentElement();
   const massNumber = state.protons + state.neutrons;
+
+  if (protonCountInput) protonCountInput.value = String(state.protons);
+  if (neutronCountInput) neutronCountInput.value = String(state.neutrons);
+  if (electronCountInput) electronCountInput.value = String(state.electrons);
+  if (orbitCountInput) orbitCountInput.value = String(state.orbitCount);
 
   if (element) {
     elementNameEl.textContent = element.name;
@@ -704,6 +718,31 @@ function handleDroppedItem(type) {
   refresh3DAtom();
 }
 
+function setParticleCountsFromInputs() {
+  if (protonCountInput) {
+    const value = Number.parseInt(protonCountInput.value, 10);
+    state.protons = Number.isNaN(value) ? state.protons : Math.max(0, value);
+  }
+
+  if (neutronCountInput) {
+    const value = Number.parseInt(neutronCountInput.value, 10);
+    state.neutrons = Number.isNaN(value) ? state.neutrons : Math.max(0, value);
+  }
+
+  if (electronCountInput) {
+    const value = Number.parseInt(electronCountInput.value, 10);
+    state.electrons = Number.isNaN(value) ? state.electrons : Math.max(0, value);
+  }
+
+  if (orbitCountInput) {
+    const value = Number.parseInt(orbitCountInput.value, 10);
+    state.orbitCount = Number.isNaN(value) ? state.orbitCount : clamp(value, 1, 7);
+  }
+
+  updateElementInfo();
+  refresh3DAtom();
+}
+
 function removeItem(type) {
   switch (type) {
     case "proton":
@@ -811,6 +850,28 @@ function setupControls() {
   if (removeOrbitButton) {
     removeOrbitButton.addEventListener("click", () => removeItem("orbit"));
   }
+
+  if (addProtonButton) {
+    addProtonButton.addEventListener("click", () => handleDroppedItem("proton"));
+  }
+
+  if (addNeutronButton) {
+    addNeutronButton.addEventListener("click", () => handleDroppedItem("neutron"));
+  }
+
+  if (addElectronButton) {
+    addElectronButton.addEventListener("click", () => handleDroppedItem("electron"));
+  }
+
+  if (addOrbitButton) {
+    addOrbitButton.addEventListener("click", () => handleDroppedItem("orbit"));
+  }
+
+  [protonCountInput, neutronCountInput, electronCountInput, orbitCountInput].forEach((input) => {
+    if (!input) return;
+    input.addEventListener("change", setParticleCountsFromInputs);
+    input.addEventListener("blur", setParticleCountsFromInputs);
+  });
 
   viewModeInputs.forEach((input) => {
     input.addEventListener("change", () => {
